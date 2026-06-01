@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI 투자 위원회 (무료 진짜 AI 버전)</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0A0B0F;
+    --surface: #13151C;
+    --card: #181B24;
+    --card2: #1E2130;
+    --border: #252A3A;
+    --border2: #2E3450;
+    --blue: #3B82F6;
+    --blue2: #60A5FA;
+    --blue-dim: #1E2D50;
+    --green: #10B981;
+    --green-dim: #0D2B1F;
+    --red: #EF4444;
+    --red-dim: #2A0F0F;
+    --yellow: #F59E0B;
+    --yellow-dim: #2A1F07;
+    --purple: #8B5CF6;
+    --text: #F0F2FA;
+    --sub: #8B90A8;
+    --muted: #4B5068;
+  }
+  * { box-shrink: 0; box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ── */
+  #header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(19,21,28,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { font-size: 16px; font-weight: 900; color: var(--blue); letter-spacing: -0.04em; display:flex;align-items:center;gap:8px; }
+  .logo span { font-size:18px; }
+  .search-bar {
+    display: flex; align-items: center;
+    background: var(--card); border: 1.5px solid var(--border2);
+    border-radius: 12px; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .search-bar:focus-within { border-color: var(--blue); }
+  .search-bar input {
+    background: transparent; border: none; outline: none;
+    color: var(--text); font-family: inherit;
+    font-size: 13px; font-weight: 800; padding: 9px 14px;
+    width: 100px; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .search-bar input::placeholder { color: var(--muted); font-weight: 500; letter-spacing:0; }
+  .btn-search {
+    background: var(--blue); color: #fff; border: none;
+    padding: 9px 16px; font-size: 12px; font-weight: 800;
+    cursor: pointer; transition: background .15s; font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+  .btn-search:hover { background: var(--blue2); }
+  .btn-search:disabled { background: var(--border); cursor: default; }
+
+  /* ── Layout ── */
+  #main {
+    max-width: 1200px; margin: 0 auto;
+    padding: 20px 20px 60px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    #main { grid-template-columns: 1fr; }
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 800; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
+  }
+
+  /* ── TradingView chart ── */
+  #chart-container {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    height: 500px;
+    position: relative;
+  }
+  #chart-container iframe { width:100%; height:100%; border:none; }
+  #chart-placeholder {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:12px; color:var(--muted);
+  }
+  #chart-placeholder .icon { font-size:48px; }
+  #chart-placeholder p { font-size:13px; }
+
+  /* ── Quote strip ── */
+  #quote-strip {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  #quote-strip.visible { display: block; }
+  .quote-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+  .quote-ticker { font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.1em; margin-bottom:4px; }
+  .quote-price { font-size:28px; font-weight:900; letter-spacing:-.04em; }
+  .quote-change { font-size:14px; font-weight:700; margin-top:4px; }
+  .quote-52 { display:flex; gap:8px; }
+  .q52 { border-radius:10px; padding:8px 12px; text-align:right; }
+  .q52 .ql { font-size:9px; color:var(--muted); margin-bottom:3px; }
+  .q52 .qv { font-size:13px; font-weight:700; }
+  .indicators { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .ind-pill {
+    background: var(--surface); border-radius:10px; padding:10px 8px;
+    text-align:center; border:1px solid var(--border);
+  }
+  .ind-label { font-size:9px; color:var(--muted); margin-bottom:4px; }
+  .ind-val { font-size:12px; font-weight:700; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge {
+    display:inline-block; padding:2px 7px; border-radius:20px;
+    font-size:9px; font-weight:800; letter-spacing:.04em;
+  }
+
+  /* ── Portfolio panel ── */
+  #portfolio-panel { margin-bottom:16px; }
+  .toggle-row { display:flex; gap:8px; margin-bottom:12px; }
+  .toggle-btn {
+    flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--border);
+    background:var(--surface); color:var(--sub); font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; transition: all .15s;
+  }
+  .toggle-btn.active { border-color:var(--blue); background:var(--blue-dim); color:var(--blue2); }
+  .input-row { display:flex; gap:8px; }
+  .input-group { flex:1; }
+  .input-label { font-size:10px; color:var(--muted); margin-bottom:5px; font-weight:600; }
+  .input-group input {
+    width:100%; background:var(--surface); border:1.5px solid var(--border);
+    border-radius:8px; color:var(--text); font-size:13px; padding:9px 12px;
+    outline:none; font-family:inherit; transition:border-color .15s;
+  }
+  .input-group input:focus { border-color:var(--blue); }
+  .input-group input::placeholder { color:var(--muted); }
+
+  /* ── Analyze button ── */
+  #btn-analyze {
+    width:100%; padding:15px; border-radius:14px;
+    background:var(--blue); color:#fff; border:none;
+    font-size:14px; font-weight:800; cursor:pointer;
+    font-family:inherit; letter-spacing:-.01em;
+    box-shadow: 0 4px 20px rgba(59,130,246,.35);
+    transition: all .2s; margin-bottom:16px;
+    display:none;
+  }
+  #btn-analyze.visible { display:block; }
+  #btn-analyze:hover { background:var(--blue2); transform:translateY(-1px); box-shadow:0 6px 28px rgba(59,130,246,.45); }
+  #btn-analyze:active { transform:translateY(0); }
+  #btn-analyze:disabled { background:var(--border); box-shadow:none; cursor:default; transform:none; }
+
+  /* ── Progress ── */
+  #progress-card { display:none; margin-bottom:16px; }
+  #progress-card.visible { display:block; }
+  .step-bar { display:flex; margin-bottom:14px; }
+  .step-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .step-line-wrap { display:flex; align-items:center; width:100%; }
+  .step-line { flex:1; height:2px; background:var(--border); transition:background .4s; }
+  .step-line.done { background:var(--blue); }
+  .step-dot {
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:800;
+    background:var(--surface); border:2px solid var(--border); color:var(--muted);
+    transition:all .3s;
+  }
+  .step-dot.active { background:var(--blue-dim); border-color:var(--blue); color:var(--blue2); }
+  .step-dot.done { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .step-label { font-size:9px; font-weight:600; color:var(--muted); text-align:center; }
+  .step-label.active { color:var(--blue2); font-weight:800; }
+  .status-row { display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px; color:var(--sub); }
+  .dots span {
+    display:inline-block; width:5px; height:5px; border-radius:50%;
+    background:var(--blue); animation:dotBounce 1.1s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay:.16s; }
+  .dots span:nth-child(3) { animation-delay:.32s; }
+  @keyframes dotBounce { 0%,100%{transform:translateY(0);opacity:.3} 50%{transform:translateY(-5px);opacity:1} }
+
+  /* ── Report ── */
+  #report-card { display:none; }
+  #report-card.visible { display:block; }
+  .report-header {
+    display:flex; align-items:center; gap:10px;
+    padding-bottom:14px; margin-bottom:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .report-title { font-size:14px; font-weight:900; color:var(--blue); }
+  #report-content { font-size:13.5px; line-height:1.85; color:var(--text); }
+  #report-content h2 { font-size:17px; font-weight:900; color:var(--blue); margin:22px 0 10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  #report-content h3 { font-size:14px; font-weight:800; color:var(--blue2); margin:16px 0 8px; }
+  #report-content h4 { font-size:13px; font-weight:700; color:var(--yellow); margin:12px 0 6px; }
+  #report-content blockquote { margin:10px 0; padding:10px 14px; background:var(--blue-dim); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; color:var(--blue2); font-style:italic; }
+  #report-content ul, #report-content .md-li { display:flex; gap:8px; padding:3px 0; }
+  #report-content ul { flex-direction:column; padding-left:4px; list-style:none; }
+  #report-content li::before { content:"•"; color:var(--blue); flex-shrink:0; }
+  #report-content hr { border:none; border-top:1px solid var(--border); margin:16px 0; }
+  #report-content strong { color:var(--text); font-weight:700; }
+  #report-content code { background:var(--surface); color:var(--yellow); padding:2px 6px; border-radius:4px; font-size:.88em; }
+  #report-content p { margin:4px 0; }
+
+  /* ── Error ── */
+  #error-card { display:none; margin-bottom:16px; }
+  #error-card.visible { display:block; background:var(--red-dim); border-color:var(--red); }
+
+  /* ── Welcome ── */
+  #welcome {
+    grid-column: 1 / -1;
+    display:flex; flex-direction:column; align-items:center;
+    padding:80px 20px; text-align:center;
+  }
+  .welcome-icon { font-size:56px; margin-bottom:20px; }
+  .welcome-title { font-size:26px; font-weight:900; letter-spacing:-.04em; margin-bottom:10px; }
+  .welcome-sub { font-size:14px; color:var(--sub); line-height:1.8; margin-bottom:32px; }
+  .ticker-chips { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:36px; }
+  .chip {
+    padding:8px 16px; border-radius:20px; border:1px solid var(--border);
+    background:var(--card); color:var(--sub); font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; transition:all .15s;
+  }
+  .chip:hover { border-color:var(--blue); color:var(--blue2); background:var(--blue-dim); }
+  .btn-start {
+    padding:15px 48px; border-radius:14px; background:var(--blue);
+    color:#fff; border:none; font-size:15px; font-weight:800;
+    cursor:pointer; font-family:inherit;
+    box-shadow:0 4px 24px rgba(59,130,246,.4);
+    transition:all .2s;
+  }
+  .btn-start:hover { background:var(--blue2); transform:translateY(-1px); }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo"><span>📈</span>AI 투자 위원회 (무료 AI)</div>
+  <div class="search-bar">
+    <input id="ticker-input" type="text" placeholder="티커 (AAPL)" value="ANET" maxlength="10"/>
+    <button class="btn-search" id="btn-search" onclick="handleStart()">분석</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <div id="welcome">
+    <div class="welcome-icon">🏛️</div>
+    <div class="welcome-title">AI 투자 위원회</div>
+    <div class="welcome-sub">
+      전문가 A(차티스트) · 전문가 B(장기투자자) · 의장<br/>
+      구글 실시간 검색 기반 평생 무료 AI 심층 분석 리포트
+    </div>
+    <div class="ticker-chips">
+      <span class="chip" onclick="setTicker('AAPL')">AAPL</span>
+      <span class="chip" onclick="setTicker('NVDA')">NVDA</span>
+      <span class="chip" onclick="setTicker('TSLA')">TSLA</span>
+      <span class="chip" onclick="setTicker('MSFT')">MSFT</span>
+      <span class="chip" onclick="setTicker('ANET')">ANET</span>
+      <span class="chip" onclick="setTicker('AMZN')">AMZN</span>
+      <span class="chip" onclick="setTicker('META')">META</span>
+      <span class="chip" onclick="setTicker('GOOGL')">GOOGL</span>
+    </div>
+    <button class="btn-start" onclick="handleStart()">분석 시작하기</button>
+  </div>
+
+  <div id="left-col" style="display:none; flex-direction:column; gap:16px;">
+    <div id="chart-container">
+      <div id="chart-placeholder">
+        <div class="icon">📊</div>
+        <p>종목을 검색하면 차트가 표시됩니다</p>
+      </div>
+    </div>
+    <div class="card" id="report-card">
+      <div class="report-header">
+        <span class="report-title">AI 투자 위원회 리포트</span>
+        <span class="badge" id="report-badge" style="display:none"></span>
+      </div>
+      <div id="report-content"></div>
+      <div id="report-spinner" style="margin-top:14px;display:none"><div class="dots"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+
+  <div id="right-col" style="display:none; flex-direction:column; gap:0;">
+    <div id="quote-strip">
+      <div class="quote-top">
+        <div>
+          <div class="quote-ticker" id="q-exchange">NYSE · —</div>
+          <div class="quote-price" id="q-price">—</div>
+          <div class="quote-change" id="q-change">—</div>
+        </div>
+        <div class="quote-52">
+          <div class="q52" style="background:var(--green-dim)">
+            <div class="ql">52주 최고</div>
+            <div class="qv" style="color:var(--green)" id="q-high52">—</div>
+          </div>
+          <div class="q52" style="background:var(--red-dim)">
+            <div class="ql">52주 최저</div>
+            <div class="qv" style="color:var(--red)" id="q-low52">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="indicators" id="indicators"></div>
+    </div>
+
+    <div class="card" id="progress-card">
+      <div class="step-bar" id="step-bar"></div>
+      <div class="status-row">
+        <span id="status-msg">준비 중...</span>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <div class="card" id="error-card">
+      <div style="color:var(--red);font-size:14px;font-weight:700;margin-bottom:6px">⚠️ 오류 발생</div>
+      <div style="color:var(--sub);font-size:12px;margin-bottom:12px" id="error-msg"></div>
+      <button onclick="handleStart()" style="padding:8px 16px;border-radius:8px;background:var(--red);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">재시도</button>
+    </div>
+
+    <div class="card" id="portfolio-panel" style="display:none;margin-bottom:16px;">
+      <div class="card-title">포지션 설정</div>
+      <div class="toggle-row">
+        <button class="toggle-btn active" id="btn-nohave" onclick="setHolding(false)">미보유</button>
+        <button class="toggle-btn" id="btn-have" onclick="setHolding(true)">보유 중</button>
+      </div>
+      <div id="holding-inputs" style="display:none">
+        <div class="input-row">
+          <div class="input-group">
+            <div class="input-label">평단가 ($)</div>
+            <input id="avg-price" type="number" placeholder="145.00" step="0.01"/>
+          </div>
+          <div class="input-group">
+            <div class="input-label">수량 (주)</div>
+            <input id="shares" type="number" placeholder="10"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="btn-analyze" onclick="handleStart()">🏛️ AI 투자 위원회 분석 시작</button>
+  </div>
+</div>
+
+<script>
+// ⚠️ 여기에 구글 AI Studio에서 발급받은 무료 API 키를 따옴표 안에 넣으세요!
+const API_KEY = "YOUR_GEMINI_API_KEY"; 
+const MODEL   = "gemini-1.5-flash"; 
+const STEPS   = ["시세 검색","데이터 정리","위원회 분석","완성"];
+
+let hasHolding = false;
+let currentTicker = "ANET";
+let quoteData = null;
+
+const $ = id => document.getElementById(id);
+function usd(v){ const n=parseFloat(v); return isNaN(n)?"-":"$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function signed(v){ const n=parseFloat(v); return isNaN(n)?"-":(n>=0?"+":"")+n.toFixed(2)+"%"; }
+
+function setTicker(t){
+  $("ticker-input").value = t;
+  currentTicker = t;
+}
+function setHolding(v){
+  hasHolding = v;
+  $("btn-nohave").className = "toggle-btn"+(v?"":" active");
+  $("btn-have").className   = "toggle-btn"+(v?" active":"");
+  $("holding-inputs").style.display = v?"block":"none";
+}
+function portfolioCtx(){
+  if(!hasHolding || !$("avg-price").value) return "미보유 (신규 진입 검토 중)";
+  return `보유 중 / 평단가 ${usd($("avg-price").value)} / ${$("shares").value||"?"}주`;
+}
+function setBusy(v){
+  $("btn-search").disabled = v;
+  $("btn-analyze").disabled = v;
+}
+function showLayout(){
+  $("welcome").style.display = "none";
+  $("left-col").style.display  = "flex";
+  $("right-col").style.display = "flex";
+  $("portfolio-panel").style.display = "block";
+  $("btn-analyze").classList.add("visible");
+}
+
+function loadChart(ticker){
+  const container = $("chart-container");
+  $("chart-placeholder").style.display = "none";
+  const old = container.querySelector("iframe");
+  if(old) old.remove();
+
+  const iframe = document.createElement("iframe");
+  iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(ticker)}&interval=D&hidesidetoolbar=0&hidetoptoolbar=0&symboledit=1&saveimage=0&toolbarbg=0A0B0F&studies=RSI%40tv-basicstudies%1FMACD%40tv-basicstudies&theme=dark&style=1&timezone=Asia%2FSeoul&withdateranges=1&showpopupbutton=1&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=ko&utm_source=&utm_medium=widget&utm_campaign=chart&utm_term=${encodeURIComponent(ticker)}`;
+  iframe.allowfullscreen = true;
+  container.appendChild(iframe);
+}
+
+function renderSteps(current){
+  const bar = $("step-bar");
+  bar.innerHTML = STEPS.map((s,i)=>{
+    const done = i<current, active = i===current;
+    return `
+      <div class="step-item">
+        <div class="step-line-wrap">
+          ${i>0?`<div class="step-line ${i<=current?"done":""}"></div>`:""}
+          <div class="step-dot ${done?"done":active?"active":""}">${done?"✓":i+1}</div>
+          ${i<STEPS.length-1?`<div class="step-line ${i<current-1?"done":""}"></div>`:""}
+        </div>
+        <span class="step-label ${active?"active":""}">${s}</span>
+      </div>`;
+  }).join("");
+}
+
+function renderQuote(q){
+  const up = parseFloat(q.changePct)>=0;
+  const col = up?"var(--green)":"var(--red)";
+  $("q-exchange").textContent = `${q.exchange||"NYSE"} · ${q.ticker}`;
+  $("q-price").textContent = usd(q.price);
+  $("q-price").style.color = col;
+  $("q-change").innerHTML = `<span style="color:${col}">${up?"▲":"▼"} ${usd(Math.abs(q.change))} (${signed(q.changePct)})</span>`;
+  $("q-high52").textContent = usd(q.high52);
+  $("q-low52").textContent  = usd(q.low52);
+
+  const ind = q.indicators||{};
+  const pills=[
+    {label:"RSI (14)",val:ind.rsi??"-",sig:ind.rsiSignal},
+    {label:"MA20",    val:ind.ma20?usd(ind.ma20):"-",sig:ind.ma20Signal},
+    {label:"MA60",    val:ind.ma60?usd(ind.ma60):"-",sig:ind.ma60Signal},
+    {label:"MA200",   val:ind.ma200?usd(ind.ma200):"-",sig:ind.ma200Signal},
+  ];
+  $("indicators").innerHTML = pills.map(p=>{
+    const sc=p.sig==="매수"?"var(--green)":p.sig==="매도"?"var(--red)":"var(--yellow)";
+    const sb=p.sig==="매수"?"var(--green-dim)":p.sig==="매도"?"var(--red-dim)":"var(--yellow-dim)";
+    const badge=p.sig?`<div class="badge" style="color:${sc};background:${sb}">${p.sig}</div>`:"";
+    return `<div class="ind-pill"><div class="ind-label">${p.label}</div><div class="ind-val">${p.val}</div>${badge}</div>`;
+  }).join("");
+  $("quote-strip").classList.add("visible");
+}
+
+function mdToHtml(text){
+  return text.split("\n").map(line=>{
+    if(/^## /.test(line))  return `<h2>${esc(line.slice(3))}</h2>`;
+    if(/^### /.test(line)) return `<h3>${esc(line.slice(4))}</h3>`;
+    if(/^#### /.test(line))return `<h4>${esc(line.slice(5))}</h4>`;
+    if(/^> /.test(line))   return `<blockquote>${esc(line.slice(2))}</blockquote>`;
+    if(/^[-*] /.test(line))return `<div class="md-li"><span style="color:var(--blue);flex-shrink:0">•</span><div>${esc(line.slice(2))}</div></div>`;
+    if(line.trim()==="---")return `<hr/>`;
+    if(!line.trim())       return `<div style="height:6px"></div>`;
+    return `<p>${esc(line)}</p>`;
+  }).join("");
+}
+function esc(t){
+  return t
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>');
+}
+
+// ── API: Step1 – Web Search (구글 검색 탑재) ──
+async function searchStockData(ticker){
+  if(API_KEY === "YOUR_GEMINI_API_KEY" || !API_KEY) {
+    throw new Error("코드 상단의 API_KEY 설정란에 발급받으신 구글 API 키를 입력하셔야 작동합니다.");
+  }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents: [{ parts: [{ text: `Search the web for current technical stock data for "${ticker}" stock on today's date. I need: current price, today's change and change%, open/high/low/close, volume, 52-week high/low, RSI(14), 20-day MA, 60-day MA, 200-day MA, MACD, key support and resistance price levels, recent price trend description. Report all numbers found.` }]}],
+      tools: [{ googleSearch: {} }] // 구글 실시간 검색 가동
+    })
+  });
+  if(!res.ok) throw new Error(`검색 API 오류 (${res.status})`);
+  const data = await res.json();
+  try {
+    return data.candidates[0].content.parts[0].text;
+  } catch(e) {
+    throw new Error("실시간 시세 검색 데이터를 불러오지 못했습니다.");
+  }
+}
+
+// ── API: Step2 – Extract JSON ──
+async function extractJSON(ticker, rawText){
+  const schema={
+    ticker,name:"회사명",exchange:"NYSE",price:0,change:0,changePct:0,
+    open:0,high:0,low:0,close:0,volume:0,high52:0,low52:0,
+    ma_values:{MA5:0,MA20:0,MA60:0,MA120:0,MA200:0},
+    wma_values:{WMA5:0,WMA20:0,WMA60:0},
+    ichimoku_str:"일목균형표 요약",rsi_str:"RSI 수치",stoch_str:"스토캐스틱",recent_data:"최근 추세 요약",
+    indicators:{rsi:50,rsiSignal:"중립",ma20:0,ma20Signal:"중립",ma60:0,ma60Signal:"중립",ma200:0,ma200Signal:"중립"}
+  };
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents: [{ parts: [{ text: `Extract ${ticker} stock data from the text below and return ONLY a JSON object. Start with { end with }. No markdown fences, no explanation.
+
+Rules:
+- rsiSignal: rsi<35→"매수", rsi>70→"매도", else→"중립"
+- ma20Signal/ma60Signal/ma200Signal: price>MA→"매수", else→"매도"
+- Unknown numbers → 0
+
+Schema: ${JSON.stringify(schema)}
+
+Text:
+${rawText.slice(0,4000)}` }]}],
+      generationConfig: {
+        responseMimeType: "application/json" // 결과물을 반드시 무조건 JSON으로 고정
+      }
+    })
+  });
+  if(!res.ok) throw new Error(`추출 API 오류 (${res.status})`);
+  const data = await res.json();
+  const clean = data.candidates[0].content.parts[0].text.trim();
+  const s=clean.indexOf("{"), e=clean.lastIndexOf("}");
+  if(s===-1||e===-1) throw new Error("JSON 파싱 실패");
+  const parsed = JSON.parse(clean.slice(s,e+1));
+  if(!parsed.price||parsed.price===0) throw new Error("현재가를 불러오지 못했습니다. 티커를 확인해주세요.");
+  return parsed;
+}
+
+// ── API: Step3 – Streaming Analysis (실시간 글자 출력) ──
+async function streamAnalysis(q){
+  const mv=q.ma_values||{}, wv=q.wma_values||{};
+  const avgP=parseFloat($("avg-price").value)||0;
+  const pnl=avgP>0?signed(((q.price-avgP)/avgP)*100):"—";
+
+  const prompt=`당신은 'AI 투자 위원회(AI Investment Committee)'입니다.
+전문가 A(차티스트·타이밍), 전문가 B(장기매집·Believer), 의장(포트폴리오 매니저) 세 명으로 구성됩니다.
+
+[중요] 클라이언트 성향: Buy & Hold — 추세 지속성과 추가 매수 기회에 집중.
+오직 가격·거래량·추세·손익비 분석만 수행하며, 피보나치 되돌림과 삼각 수렴(Triangular Convergence) 관점을 중심적으로 분석하세요. 기업 뉴스/실적/사업 내용 일절 배제.
+
+[분석 대상]
+종목: ${q.ticker} (${q.name}) / 현재가: ${usd(q.price)} / 거래소: ${q.exchange}
+당일: 시가 ${usd(q.open)} / 고가 ${usd(q.high)} / 저가 ${usd(q.low)} / 종가 ${usd(q.close)} / 거래량 ${Number(q.volume||0).toLocaleString()}
+전일대비: ${signed(q.changePct)} / 52주: 고 ${usd(q.high52)} / 저 ${usd(q.low52)}
+사용자 상황: ${portfolioCtx()}
+
+[기술적 지표]
+일봉 MA: 5일(${mv.MA5||"-"}), 20일(${mv.MA20||"-"}), 60일(${mv.MA60||"-"}), 120일(${mv.MA120||"-"}), 200일(${mv.MA200||"-"})
+주봉 WMA: 5주(${wv.WMA5||"-"}), 20주(${wv.WMA20||"-"}), 60주(${wv.WMA60||"-"})
+일목균형표: ${q.ichimoku_str||"-"}
+RSI: ${q.rsi_str||"-"} / Stochastic: ${q.stoch_str||"-"}
+최근 추세: ${q.recent_data||"-"}
+
+---
+아래 형식으로 한국어로 리포트 작성. 불필요한 볼드 최소화.
+
+## 🎯 ${q.ticker} (${q.name}) AI 투자 위원회 분석 리포트
+
+> [한줄 요약] : 핵심 결론 한 문장
+
+### 1. 📋 포트폴리오 현황
+- 평단가: ${hasHolding?usd($("avg-price").value):"신규 진입자 관점"} / 현재가: ${usd(q.price)} / 수익률: ${pnl}
+- 당일 OHLCV: ${usd(q.open)} / ${usd(q.high)} / ${usd(q.low)} / ${usd(q.close)} / ${Number(q.volume||0).toLocaleString()}
+- 상태:
+
+### 2. 📊 기술적 정밀 분석
+
+**[ A. 캔들 & 차트 패턴 ]**
+- 일봉 (Daily) / [패턴명 및 삼각 수렴 분석 여부]:
+- 주봉 (Weekly) / [패턴명]:
+
+**[ B. 엘리엇 파동 & 피보나치 되돌림 ]**
+- 현재 파동 위치 (각 파형 기간·가격 명시):
+- 피보나치 핵심 레벨 및 주요 지지선:
+- 저항: 1차 / 2차
+- 지지: 1차 / 2차
+
+**[ C. 추세 및 지표 ]**
+- 이동평균선 배열:
+- RSI / Stochastic:
+- 거래량(VPA):
+
+### 3. ⚔️ 전문가 토론
+
+🗣️ **전문가 A (Chartist)**
+- 단기 관점:
+- 기회:
+- 우려:
+
+🧘 **전문가 B (Believer)**
+- 장기 추세:
+- 전략 (불타기 vs 저점매집):
+- 추매 타점:
+- 리스크:
+
+### 4. ⚖️ 앙상블 종합
+- 추세 판단:
+- Buy Zone: 1차 / 2차
+- Target: 1차 / 2차
+
+### 5. 🦁 의장의 최종 전략
+
+> [한줄 결론]
+
+**[ 시나리오 A: 장기 적립 ]**
+- 전략 및 매집 구간:
+
+**[ 시나리오 B: 리스크 관리 ]**
+- Stop Loss:
+
+**[ 🧮 손익비 R/R ]**
+- 진입가 → 목표가 vs 손절가 / 손익비 = 1:X.X (승인/보류)
+
+**[ 🧮 투자 매력도 ]**
+- 장기 보유: 높음/중립/낮음 / 현재 진입: 적극매수/분할매수/관망
+- 최종 판결:`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${API_KEY}&alt=sse`;
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }]
+    })
+  });
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf="", mdBuf="";
+
+  $("report-card").classList.add("visible");
+  $("report-content").innerHTML="";
+  $("report-spinner").style.display="block";
+  const badge=$("report-badge");
+  badge.style.display="inline-block";
+  badge.style.color="var(--yellow)"; badge.style.background="var(--yellow-dim)";
+  badge.textContent="LIVE ●";
+
+  while(true){
+    const {done,value}=await reader.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split("\n"); buf=lines.pop()||"";
+    for(const line of lines){
+      if(!line.startsWith("data: ")) continue;
+      const j=line.slice(6).trim();
+      try{
+        const e=JSON.parse(j);
+        const chunkText = e.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(chunkText){
+          mdBuf+=chunkText;
+          $("report-content").innerHTML=mdToHtml(mdBuf);
+          $("report-content").scrollIntoView({behavior:"smooth",block:"end"});
+        }
+      }catch{}
+    }
+  }
+
+  $("report-spinner").style.display="none";
+  badge.style.color="var(--green)"; badge.style.background="var(--green-dim)";
+  badge.textContent="완료 ✓";
+}
+
+async function handleStart(){
+  const ticker = $("ticker-input").value.trim().toUpperCase();
+  if(!ticker) return;
+  currentTicker = ticker;
+
+  showLayout();
+  setBusy(true);
+  loadChart(ticker);
+
+  $("quote-strip").classList.remove("visible");
+  $("report-card").classList.remove("visible");
+  $("error-card").classList.remove("visible");
+  $("error-card").style.display="none";
+  $("progress-card").classList.add("visible");
+  $("progress-card").style.display="block";
+  $("btn-analyze").textContent="🏛️ AI 투자 위원회 분석 중...";
+
+  try{
+    renderSteps(0); $("status-msg").textContent=`${ticker} 시세 실시간 검색 중...`;
+    const rawText = await searchStockData(ticker);
+
+    renderSteps(1); $("status-msg").textContent="데이터 정밀 필터링 중...";
+    const q = await extractJSON(ticker, rawText);
+    quoteData = q;
+    renderQuote(q);
+
+    renderSteps(2); $("status-msg").textContent="위원회 끝장 토론 진행 중...";
+    await streamAnalysis(q);
+
+    renderSteps(4);
+    $("progress-card").classList.remove("visible");
+    $("progress-card").style.display="none";
+    $("btn-analyze").textContent="🏛️ AI 투자 위원회 분석 재실행";
+
+  }catch(e){
+    $("progress-card").classList.remove("visible");
+    $("progress-card").style.display="none";
+    $("error-card").classList.add("visible");
+    $("error-card").style.display="block";
+    $("error-msg").textContent=e.message;
+    $("btn-analyze").textContent="🏛️ AI 투자 위원회 분석 시작";
+  }finally{
+    setBusy(false);
+  }
+}
+
+$("ticker-input").addEventListener("keydown", e=>{
+  if(e.key==="Enter") handleStart();
+});
+</script>
+</body>
+</html>
